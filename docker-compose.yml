@@ -1,0 +1,33 @@
+services:
+  9router:
+    image: decolua/9router:${ROUTER_IMAGE_TAG:-latest}
+    container_name: 9router
+    restart: unless-stopped
+    ports:
+      # 0.0.0.0 = bisa diakses dari luar mesin/host.
+      # Ganti ke 127.0.0.1 kalau hanya mau diakses lokal / lewat reverse proxy.
+      - "${ROUTER_BIND_ADDR:-0.0.0.0}:${ROUTER_PORT:-20128}:20128"
+    volumes:
+      - 9router-data:/app/data
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /app/data
+      PORT: "20128"
+      HOSTNAME: "0.0.0.0"
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:20128/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  9router-data:
+    name: 9router-data
